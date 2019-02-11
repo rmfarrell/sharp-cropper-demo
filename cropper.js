@@ -6,6 +6,8 @@ module.exports = class Cropper {
    * Constructor for Cropper
    * 
    * @param {Image} image
+   * @param {number} image.height
+   * @param {number} image.width
    * @param {object} focus - x/y coordinates of center of photo center of interest
    * @param {number} focus.x
    * @param {number} focus.y 
@@ -15,9 +17,7 @@ module.exports = class Cropper {
    * @param {number} [cropGuide][left] - left edge of crop area
    * @param {number} [cropGuide][right] - right edge of crop area
    */
-  constructor(image = { height: 0, width: 0 },
-    focus = { x: 0, y: 0 },
-    cropGuide) {
+  constructor(image, focus = { x: 0.5, y: 0.5 }, cropGuide) {
     this.focus = focus
     this.image = image
     this.cropGuide = cropGuide
@@ -27,8 +27,7 @@ module.exports = class Cropper {
     this.height = 0
     this.scale = 1
     this.x = 0
-
-    console.log(this.focus)
+    this.y = 0
 
     if (!image) {
       throw new Error('image required')
@@ -47,27 +46,37 @@ module.exports = class Cropper {
     this.outerWidth = width;
     this.outerHeight = height
 
-
     if (zoom === 'out') {
       this._anchorToInnerEdge(this.image, this.cropGuide)
     } else {
       this._anchorToOuterEdge(this.image, this.focus)
     }
+
     this._zoomToFit()
     this._cover()
 
     return [this.x, this.y, this.width, this.height]
   }
 
+
   // -- Internals
 
   /**
-   * Is the image vertical?
-   * @return {Boolean}
+   * Get image's orientation
+   * @returns {String} -  vertical|horiztonal|square
    */
-  get _isVertical() {
-    return this.outerHeight > this.outerWidth
+  get _orientation() {
+
+    if (this.outerHeight === this.outerWidth) {
+      return 'square'
+    }
+    if (this.outerHeight > this.outerWidth) {
+      return 'vertical'
+    }
+    return 'horizontal'
   }
+
+
 
   /**
    * Find any gaps between the image and the outer edge
@@ -104,20 +113,30 @@ module.exports = class Cropper {
    * Place the image in the frame matching its longest axis
    */
   _anchorToOuterEdge() {
-    const { height, width } = this.image;
-
-    // fill the largest axis
-    if (this._isVertical) {
-      this.scale = this.outerHeight / height;
-      this.height = this.outerHeight;
-      this.width = width * this.scale;
-    } else {
-      this.scale = this.outerWidth / width;
-      this.width = this.outerWidth;
-      this.height = height * this.scale;
+    if (this.image.width / this.image.height < this.outerWidth / this.outerHeight) {
+      return this._alignOuterEdgesHorizontally()
     }
-    this.x = this.offset.x
-    this.y = this.offset.y;
+    return this._alignOuterEdgesVertically()
+  }
+
+  _alignOuterEdgesVertically() {
+    const { height = 0, width = 0 } = this.image;
+
+    this.scale = this.outerHeight / height;
+    this.height = this.outerHeight;
+    this.width = width * this.scale;
+    this.x = (this.outerWidth / 2) - (this.width * this.focus.x)
+    this.y = 0
+  }
+
+  _alignOuterEdgesHorizontally() {
+    const { height = 0, width = 0 } = this.image;
+
+    this.scale = this.outerWidth / width;
+    this.width = this.outerWidth;
+    this.height = height * this.scale;
+    this.y = (this.outerHeight / 2) - (this.height * this.focus.y)
+    this.x = 0
   }
 
   /**
@@ -145,13 +164,6 @@ module.exports = class Cropper {
     }
     this.x = (this.outerWidth / 2) - (this.width * this.focus.x)
     this.y = (this.outerHeight / 2) - (this.height * this.focus.y)
-  }
-
-  get offset() {
-    return {
-      x: this.focus.x * this.scale - (this.width / 2),
-      y: this.focus.y * this.scale - (this.height / 2)
-    }
   }
 
   /**
