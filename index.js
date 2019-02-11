@@ -6,19 +6,17 @@ const sharp = require('sharp'),
 
   // focus of image
   focus = {
-    x: 100,
-    y: 300
+    x: 0.5,
+    y: 0.4
   },
 
   // output dimensions
   target = [
-    200, // width
-    300  // height
+    900, // width
+    200  // height
   ]
 
 main()
-
-const
 
 function main() {
   const image = sharp(fs.readFileSync(srcImagePath))
@@ -30,7 +28,7 @@ function main() {
       const cropper = new Cropper({ height, width }, focus)
       const cropped = cropper
         .crop(...target)
-        .map((val) => Math.floor(val))
+        .map((val) => Math.ceil(val))
 
       // cropped outputs an image that is large enough to fill the the frame (resizedWidth/resizedHeight)
       // it's ceentered itn place and then shifted to fill the frame
@@ -41,15 +39,14 @@ function main() {
         y, // y-position of same
         resizedWidth, // width of resized image
         resizedHeight // height of resized image
-      ] = croppped
+      ] = cropped
 
       console.log('\n-- cropped\n')
       console.log(cropped)
 
-      // this is the param that extract taks
-      const area = {
-        left: cropped[2] - target[0] + cropped[0],
-        top: cropped[3] - target[1] + cropped[1],
+      let area = {
+        left: Math.abs(x),
+        top: Math.abs(y),
         width: target[0],
         height: target[1]
       }
