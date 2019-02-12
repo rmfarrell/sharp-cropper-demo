@@ -92,7 +92,7 @@ module.exports = class Cropper {
    * @return {number[]} 
    */
   trim(width = 0, height = 0) {
-    return this._crop(width, height)
+    return this.crop(width, height)
   }
 
 
@@ -103,10 +103,8 @@ module.exports = class Cropper {
    * @return {number[]}
    */
   zoom(width = 0, height = 0) {
-    return this._crop(width, height, true)
+    return this.crop(width, height, true)
   }
-
-  // -- Internals
 
   /**
    * Crop the image in height/width area
@@ -115,7 +113,7 @@ module.exports = class Cropper {
    * @param {Boolean} zoom - set whether image is zoomed in
    * @return {number[]}
    */
-  _crop(width = 0, height = 0, zoom = false) {
+  crop(width = 0, height = 0, zoom = false) {
 
     // set width/height
     this.outerWidth = width;
@@ -135,6 +133,9 @@ module.exports = class Cropper {
 
     return [this.x, this.y, this.width, this.height]
   }
+
+  // -- Internals
+
 
   /**
    * Validate an object of relative coordinates (numbers between 0 and 1)
